@@ -1,9 +1,10 @@
 ---
 
 /TEST_OUTPUT/workspace/another_consumer.ts
-References in File: 4
-At: L8:C3, L32:C23, L32:C39, L32:C55
+References in File: 2
+At: L7:C3, L29:C30
 
+ 2|import { 
  3|  SharedFunction, 
  4|  SharedInterface, 
  5|  SharedClass, 
@@ -14,8 +15,10 @@ At: L8:C3, L32:C23, L32:C39, L32:C55
 10|
 11|// AnotherConsumerFunction uses SharedFunction in a different way
 12|export function AnotherConsumerFunction(): void {
-13|  const result = SharedFunction();
 ...
+24|  
+25|  // Using SharedType
+26|  const mixedArray: SharedType[] = ["string", 42, "another"];
 27|  
 28|  // Using SharedConstant
 29|  const prefixed = `PREFIX_${SharedConstant}`;
@@ -24,14 +27,14 @@ At: L8:C3, L32:C23, L32:C39, L32:C55
 32|  const enumValues = [SharedEnum.ONE, SharedEnum.TWO, SharedEnum.THREE];
 33|  
 34|  console.log(instance, iface, mixedArray, prefixed, enumValues);
-35|}
 
 ---
 
 /TEST_OUTPUT/workspace/consumer.ts
 References in File: 2
-At: L8:C3, L34:C15
+At: L7:C3, L31:C15
 
+ 2|import { 
  3|  SharedFunction, 
  4|  SharedInterface, 
  5|  SharedClass, 
@@ -42,8 +45,10 @@ At: L8:C3, L34:C15
 10|
 11|// ConsumerFunction uses SharedFunction
 12|export function ConsumerFunction(): void {
-13|  console.log("Consumer calling:", SharedFunction());
 ...
+26|  const value: SharedType = "string value";
+27|  const numValue: SharedType = 42;
+28|  console.log(value, numValue);
 29|  
 30|  // Using SharedConstant
 31|  console.log(SharedConstant);

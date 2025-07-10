@@ -47,75 +47,103 @@ func TestFindReferences(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		symbolName    string
+		filePath      string
+		line          int
+		column        int
 		expectedText  string
 		expectedFiles int // Number of files where references should be found
 		snapshotName  string
+		symbolForLog  string
 	}{
 		{
 			name:          "Function with references across files",
-			symbolName:    "helper_function",
+			filePath:      "src/helper.rs",
+			line:          4,
+			column:        8,
 			expectedText:  "helper_function",
 			expectedFiles: 2,
 			snapshotName:  "helper-function",
+			symbolForLog:  "helper_function",
 		},
 		{
 			name:          "Function with reference in same file",
-			symbolName:    "foo_bar",
+			filePath:      "src/main.rs",
+			line:          9,
+			column:        4,
 			expectedText:  "main()",
 			expectedFiles: 1, // main.rs
 			snapshotName:  "foobar-function",
+			symbolForLog:  "foo_bar",
 		},
 		{
 			name:          "Struct with references across files",
-			symbolName:    "SharedStruct",
+			filePath:      "src/types.rs",
+			line:          54,
+			column:        8,
 			expectedText:  "consumer_function",
 			expectedFiles: 2, // consumer.rs and another_consumer.rs
 			snapshotName:  "shared-struct",
+			symbolForLog:  "SharedStruct",
 		},
 		{
 			name:          "Method with references across files",
-			symbolName:    "method",
+			filePath:      "src/types.rs",
+			line:          64,
+			column:        8,
 			expectedText:  "method",
 			expectedFiles: 1,
 			snapshotName:  "struct-method",
+			symbolForLog:  "method",
 		},
 		{
 			name:          "Interface with references across files",
-			symbolName:    "SharedInterface",
+			filePath:      "src/types.rs",
+			line:          70,
+			column:        8,
 			expectedText:  "iface",
 			expectedFiles: 2, // consumer.rs and another_consumer.rs
 			snapshotName:  "shared-interface",
+			symbolForLog:  "SharedInterface",
 		},
 		{
 			name:          "Interface method with references",
-			symbolName:    "get_name",
+			filePath:      "src/types.rs",
+			line:          71,
+			column:        5,
 			expectedText:  "get_name",
 			expectedFiles: 2,
 			snapshotName:  "interface-method",
+			symbolForLog:  "get_name",
 		},
 		{
 			name:          "Constant with references across files",
-			symbolName:    "SHARED_CONSTANT",
+			filePath:      "src/types.rs",
+			line:          81,
+			column:        8,
 			expectedText:  "SHARED_CONSTANT",
 			expectedFiles: 2,
 			snapshotName:  "shared-constant",
+			symbolForLog:  "SHARED_CONSTANT",
 		},
 		{
 			name:          "Type with references across files",
-			symbolName:    "SharedType",
+			filePath:      "src/types.rs",
+			line:          79,
+			column:        8,
 			expectedText:  "SharedType",
 			expectedFiles: 2,
 			snapshotName:  "shared-type",
+			symbolForLog:  "SharedType",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			filePath := filepath.Join(suite.WorkspaceDir, tc.filePath)
 			// Call the FindReferences tool
-			result, err := tools.FindReferences(ctx, suite.Client, tc.symbolName)
+			result, err := tools.FindReferences(ctx, suite.Client, filePath, tc.line, tc.column)
 			if err != nil {
-				t.Fatalf("Failed to find references: %v", err)
+				t.Fatalf("Failed to find references for %s: %v", tc.symbolForLog, err)
 			}
 
 			// Check that the result contains relevant information

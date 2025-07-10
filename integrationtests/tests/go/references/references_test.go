@@ -2,6 +2,7 @@ package references_test
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -21,82 +22,103 @@ func TestFindReferences(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		symbolName    string
+		filePath      string
+		line          int
+		column        int
 		expectedText  string
 		expectedFiles int // Number of files where references should be found
 		snapshotName  string
+		symbolForLog  string
 	}{
 		{
 			name:          "Function with references across files",
-			symbolName:    "HelperFunction",
+			filePath:      "helper.go",
+			line:          4,
+			column:        6,
 			expectedText:  "ConsumerFunction",
 			expectedFiles: 2, // consumer.go and another_consumer.go
 			snapshotName:  "helper-function",
+			symbolForLog:  "HelperFunction",
 		},
 		{
 			name:          "Function with reference in same file",
-			symbolName:    "FooBar",
+			filePath:      "main.go",
+			line:          6,
+			column:        6,
 			expectedText:  "main()",
 			expectedFiles: 1, // main.go
 			snapshotName:  "foobar-function",
+			symbolForLog:  "FooBar",
 		},
 		{
 			name:          "Struct with references across files",
-			symbolName:    "SharedStruct",
+			filePath:      "types.go",
+			line:          6,
+			column:        6,
 			expectedText:  "ConsumerFunction",
 			expectedFiles: 2, // consumer.go and another_consumer.go
 			snapshotName:  "shared-struct",
+			symbolForLog:  "SharedStruct",
 		},
 		{
 			name:          "Method with references across files",
-			symbolName:    "SharedStruct.Method",
+			filePath:      "types.go",
+			line:          15,
+			column:        24,
 			expectedText:  "s.Method()",
 			expectedFiles: 1, // consumer.go
 			snapshotName:  "struct-method",
+			symbolForLog:  "SharedStruct.Method",
 		},
 		{
 			name:          "Interface with references across files",
-			symbolName:    "SharedInterface",
+			filePath:      "types.go",
+			line:          20,
+			column:        6,
 			expectedText:  "var iface SharedInterface",
 			expectedFiles: 2, // consumer.go and another_consumer.go
 			snapshotName:  "shared-interface",
+			symbolForLog:  "SharedInterface",
 		},
 		{
 			name:          "Interface method with references",
-			symbolName:    "SharedInterface.GetName",
+			filePath:      "types.go",
+			line:          22,
+			column:        2,
 			expectedText:  "iface.GetName()",
 			expectedFiles: 1, // consumer.go
 			snapshotName:  "interface-method",
+			symbolForLog:  "SharedInterface.GetName",
 		},
 		{
 			name:          "Constant with references across files",
-			symbolName:    "SharedConstant",
+			filePath:      "types.go",
+			line:          26,
+			column:        7,
 			expectedText:  "SharedConstant",
 			expectedFiles: 2, // consumer.go and another_consumer.go
 			snapshotName:  "shared-constant",
+			symbolForLog:  "SharedConstant",
 		},
 		{
 			name:          "Type with references across files",
-			symbolName:    "SharedType",
+			filePath:      "types.go",
+			line:          29,
+			column:        6,
 			expectedText:  "SharedType",
 			expectedFiles: 2, // consumer.go and another_consumer.go
 			snapshotName:  "shared-type",
-		},
-		{
-			name:          "References not found",
-			symbolName:    "NotFound",
-			expectedText:  "No references found for symbol:",
-			expectedFiles: 0,
-			snapshotName:  "not-found",
+			symbolForLog:  "SharedType",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			filePath := filepath.Join(suite.WorkspaceDir, tc.filePath)
 			// Call the FindReferences tool
-			result, err := tools.FindReferences(ctx, suite.Client, tc.symbolName)
+			result, err := tools.FindReferences(ctx, suite.Client, filePath, tc.line, tc.column)
 			if err != nil {
-				t.Fatalf("Failed to find references: %v", err)
+				t.Fatalf("Failed to find references for %s: %v", tc.symbolForLog, err)
 			}
 
 			// Check that the result contains relevant information

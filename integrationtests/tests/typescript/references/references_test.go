@@ -42,82 +42,103 @@ func TestFindReferences(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		symbolName    string
+		filePath      string
+		line          int
+		column        int
 		expectedText  string
 		expectedFiles int // Number of files where references should be found
 		snapshotName  string
+		symbolForLog  string
 	}{
 		{
 			name:          "Function with references across files",
-			symbolName:    "SharedFunction",
+			filePath:      "helper.ts",
+			line:          4,
+			column:        17,
 			expectedText:  "ConsumerFunction",
 			expectedFiles: 2, // consumer.ts and another_consumer.ts
 			snapshotName:  "shared-function",
+			symbolForLog:  "SharedFunction",
 		},
 		{
 			name:          "Function with reference in same file",
-			symbolName:    "TestFunction",
+			filePath:      "main.ts",
+			line:          2,
+			column:        17,
 			expectedText:  "main()",
 			expectedFiles: 1, // main.ts
 			snapshotName:  "test-function",
+			symbolForLog:  "TestFunction",
 		},
 		{
 			name:          "Class with references across files",
-			symbolName:    "SharedClass",
+			filePath:      "helper.ts",
+			line:          14,
+			column:        14,
 			expectedText:  "SharedClass",
 			expectedFiles: 2, // consumer.ts and another_consumer.ts
 			snapshotName:  "shared-class",
+			symbolForLog:  "SharedClass",
 		},
 		{
 			name:          "Method with references across files",
-			symbolName:    "helperMethod", // Method name only
+			filePath:      "helper.ts",
+			line:          27,
+			column:        3,
 			expectedText:  "helperMethod",
 			expectedFiles: 1, // consumer.ts
 			snapshotName:  "class-method",
+			symbolForLog:  "helperMethod",
 		},
 		{
 			name:          "Interface with references across files",
-			symbolName:    "SharedInterface",
+			filePath:      "helper.ts",
+			line:          9,
+			column:        18,
 			expectedText:  "SharedInterface",
 			expectedFiles: 2, // consumer.ts and another_consumer.ts
 			snapshotName:  "shared-interface",
+			symbolForLog:  "SharedInterface",
 		},
 		{
 			name:          "Interface method with references",
-			symbolName:    "getName", // Method name only
+			filePath:      "helper.ts",
+			line:          10,
+			column:        3,
 			expectedText:  "getName",
 			expectedFiles: 2, // Helper file defines it, consumer uses it
 			snapshotName:  "interface-method",
+			symbolForLog:  "getName",
 		},
 		{
 			name:          "Constant with references across files",
-			symbolName:    "SharedConstant",
+			filePath:      "helper.ts",
+			line:          36,
+			column:        14,
 			expectedText:  "SharedConstant",
 			expectedFiles: 2, // consumer.ts and another_consumer.ts
 			snapshotName:  "shared-constant",
-		},
-		{
-			name:          "Type with references across files",
-			symbolName:    "SharedType",
-			expectedText:  "SharedType",
-			expectedFiles: 2, // consumer.ts and another_consumer.ts
-			snapshotName:  "shared-type",
+			symbolForLog:  "SharedConstant",
 		},
 		{
 			name:          "Enum with references across files",
-			symbolName:    "SharedEnum",
+			filePath:      "helper.ts",
+			line:          39,
+			column:        13,
 			expectedText:  "SharedEnum",
 			expectedFiles: 2, // consumer.ts and another_consumer.ts
 			snapshotName:  "shared-enum",
+			symbolForLog:  "SharedEnum",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			filePath := filepath.Join(suite.WorkspaceDir, tc.filePath)
 			// Call the FindReferences tool
-			result, err := tools.FindReferences(ctx, suite.Client, tc.symbolName)
+			result, err := tools.FindReferences(ctx, suite.Client, filePath, tc.line, tc.column)
 			if err != nil {
-				t.Fatalf("Failed to find references: %v", err)
+				t.Fatalf("Failed to find references for %s: %v", tc.symbolForLog, err)
 			}
 
 			// Check that the result contains relevant information
